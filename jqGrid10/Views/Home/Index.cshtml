@@ -1,0 +1,133 @@
+﻿@using jqGrid10.Models
+@using JqGridHelper.Utils
+@{
+    ViewBag.Title = "Index";
+}
+
+<div dir="rtl" id="grid1" style="width:100%; height: 100%" align="center">
+    <div id="rsperror"></div>
+    <table id="list" cellpadding="0" cellspacing="0"></table>
+    <div id="pager" style="text-align:center;"></div>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            // Responsive jqGrid
+            $(window).bind('resize', function() {
+                resizeGrid();
+            }).trigger('resize');
+
+            function resizeGrid() {
+                var targetContainer = "#grid1";
+                var targetGrid = "#list";
+
+                $(targetGrid).setGridWidth($(targetContainer).width() - 2, true);
+                $(targetGrid).setGridHeight($(window).height() - 240);
+            }
+
+            $.jgrid.formatter.integer.thousandsSeparator = ',';
+            $.jgrid.formatter.number.thousandsSeparator = ',';
+            $.jgrid.formatter.currency.thousandsSeparator = ',';
+
+            $('#list').jqGrid({
+                caption: "آزمایش دهم",
+                //url from wich data should be requested
+                url: '@Url.Action("GetPosts", "Home")',
+                //type of data
+                datatype: 'json',
+                jsonReader: {
+                    root: "Rows",
+                    page: "Page",
+                    total: "Total",
+                    records: "Records",
+                    repeatitems: true,
+                    userdata: "UserData",
+                    id: "Id",
+                    cell: "RowCells"
+                },
+                //url access method type
+                mtype: 'POST',
+                //columns names
+                colNames: ['شماره', 'عنوان', 'گروه', 'تعداد بار مشاهده'],
+                //columns model
+                colModel: [
+                    {
+                        name: '@(StronglyTyped.PropertyName<Post>(x => x.Id))',
+                        index: '@(StronglyTyped.PropertyName<Post>(x => x.Id))',
+                        align: 'right',
+                        width: 40, hidden: true, key: true
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Post>(x => x.Title))',
+                        index: '@(StronglyTyped.PropertyName<Post>(x => x.Title))',
+                        align: 'right',
+                        width: 150,
+                        summaryTpl: '<div style="text-align: left;">خلاصه </div>',
+                        summaryType: function (val, name, record) {
+                            return "";
+                        }
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Post>(x => x.CategoryName))',
+                        index: '@(StronglyTyped.PropertyName<Post>(x => x.CategoryName))',
+                        align: 'center',
+                        width: 150
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Post>(x => x.NumberOfViews))',
+                        index: '@(StronglyTyped.PropertyName<Post>(x => x.NumberOfViews))',
+                        align: 'center',
+                        width: 70,
+                        summaryType: 'sum', summaryTpl: '<b>جمع مشاهدات: {0}</b>'
+                    }
+                ],
+                //pager for grid
+                pager: $('#pager'),
+                //number of rows per page
+                rowNum: 20,
+                rowList: [10, 20, 50, 100],
+                //initial sorting column
+                sortname: 'Id',
+                //initial sorting direction
+                sortorder: 'asc',
+                //we want to display total records count
+                viewrecords: true,
+                width: 'auto',
+                autowidth: true,
+                shrinkToFit: true,
+                //height: 'auto',
+                hidegrid: false,
+                direction: "rtl",
+                gridview: true,
+                rownumbers: true,
+                loadComplete: function() {
+                    //change alternate rows color
+                    $("tr.jqgrow:odd").css("background", "#E0E0E0");
+                    resizeGrid();
+                    $('#list').jqGrid('groupingToggle', 'list' + 'ghead_0_0');
+                    $("tr.jqfoot td").css({
+                        "background": "#2f4f4f",
+                        "color": "#FFF"
+                    });
+                },
+                loadError: function(xhr, st, err) {
+                    jQuery("#rsperror").html("Type: " + st + "; Response: " + xhr.status + " " + xhr.statusText);
+                },
+                grouping: true,
+                groupingView: {
+                    groupField: ['CategoryName'],
+                    groupOrder: ['asc'],
+                    groupText : ['<b>{0} - {1} ردیف</b>'],
+                    groupDataSorted: true,
+                    groupColumnShow: false,
+                    groupCollapse: true,
+                    groupSummary: [true],
+                    showSummaryOnHide: true
+                }
+            }).jqGrid('gridResize', { minWidth: 400, minHeight: 150 });
+        });
+    </script>
+}

@@ -1,0 +1,311 @@
+﻿@using jqGrid09.Models
+@using JqGridHelper.Utils
+@{
+    ViewBag.Title = "Index";
+}
+
+<div dir="rtl" id="grid1" style="width:100%; height: 100%" align="center">
+    <div id="rsperror"></div>
+    <table id="list" cellpadding="0" cellspacing="0"></table>
+    <div id="pager" style="text-align:center;"></div>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            // Responsive jqGrid
+            $(window).bind('resize', function () {
+                resizeGrid();
+            }).trigger('resize');
+
+            function resizeGrid() {
+                var targetContainer = "#grid1";
+                var targetGrid = "#list";
+
+                $(targetGrid).setGridWidth($(targetContainer).width() - 2, true);
+                $(targetGrid).setGridHeight($(window).height() - 240);
+            }
+
+            $.jgrid.formatter.integer.thousandsSeparator = ',';
+            $.jgrid.formatter.number.thousandsSeparator = ',';
+            $.jgrid.formatter.currency.thousandsSeparator = ',';
+
+            $('#list').jqGrid({
+                caption: "آزمایش نهم",
+                //url from wich data should be requested
+                url: '@Url.Action("GetUsers","Home")',
+                //url for edit operation
+                editurl: '@Url.Action("EditUser","Home")',
+                //type of data
+                datatype: 'json',
+                jsonReader: {
+                    root: "Rows",
+                    page: "Page",
+                    total: "Total",
+                    records: "Records",
+                    repeatitems: true,
+                    userdata: "UserData",
+                    id: "Id",
+                    cell: "RowCells"
+                },
+                //url access method type
+                mtype: 'POST',
+                //columns names
+                colNames: ['شماره', 'نام', 'ایمیل', 'کلمه عبور', 'وب سایت', ' '],
+                //columns model
+                colModel: [
+                    {
+                        name: '@(StronglyTyped.PropertyName<User>(x=>x.Id))',
+                        index: '@(StronglyTyped.PropertyName<User>(x => x.Id))',
+                        align: 'right', width: 40,
+                        editable: false, hidden: true, key: true
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<User>(x => x.Name))',
+                        index: '@(StronglyTyped.PropertyName<User>(x => x.Name))',
+                        align: 'right', width: 150,
+                        editable: true, edittype: 'text',
+                        editoptions: {
+                            maxlength: 40
+                        },
+                        editrules: {
+                            required: true,
+                            custom: true,
+                            custom_func: function (value, colname) {
+                                if (!value)
+                                    return [false, "لطفا نامی را وارد کنید"];
+
+                                if (value.length < 3 || value.length > 40)
+                                    return [false, colname + " باید بین 3 تا 40 حرف باشد"];
+                                else
+                                    return [true, ""];
+                            }
+                        }
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<User>(x => x.Email))',
+                        index: '@(StronglyTyped.PropertyName<User>(x => x.Email))',
+                        align: 'center', width: 150,
+                        editable: true, edittype: 'text',
+                        editoptions: {
+                            maxlength: 250,
+                            dir: 'ltr'
+                        },
+                        editrules: {
+                            required: true,
+                            email: true
+                        },
+                        formatter: 'email'
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<User>(x => x.Password))',
+                        index: '@(StronglyTyped.PropertyName<User>(x => x.Password))',
+                        align: 'center', width: 70,
+                        editable: true, edittype: 'password',
+                        editoptions: {
+                            maxlength: 10,
+                            dir: 'ltr'
+                        },
+                        editrules: {
+                            //required: true ---> در این حالت خاص قابل استفاده نیست
+                            //در حالت ویرایش رکورد، ورود کلمه عبور اختیاری است
+                            //در حالت افزودن رکورد، ورود کلمه عبور اجباری است
+                        }
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<User>(x => x.SiteUrl))',
+                        index: '@(StronglyTyped.PropertyName<User>(x => x.SiteUrl))',
+                        align: 'center', width: 150,
+                        editable: true, edittype: 'text',
+                        editoptions: {
+                            maxlength: 1000,
+                            dir: 'ltr'
+                        },
+                        editrules: {
+                            required: true,
+                            url: true
+                        },
+                        formatter: function (cellvalue, options, rowObject) {
+                            return "<a href='" + cellvalue + "' >" + cellvalue + "</a>";
+                        },
+                        unformat: function (cellvalue, options, cell) {
+                            return $('a', cell).attr('href');
+                        }
+                    },
+                    {
+                        name: 'myac', width: 80, fixed: true, sortable: false,
+                        resize: false,
+                        //formatter: 'actions',
+                        formatter: function (cellvalue, options, rowObject) {
+                            if (cellvalue === undefined && options.rowId === "_empty") {
+                                // در حالت نمایش ردیف توکار جدید دکمه‌های ویرایش و حذف معنی ندارند
+                                options.colModel.formatoptions.editbutton = false;
+                                options.colModel.formatoptions.delbutton = false;
+                            }
+                            return $.fn.fmatter.actions(cellvalue, options, rowObject);
+                        },
+                        formatoptions: {
+                            keys: true,
+                            afterSave: function (rowid, response) {
+                            },
+                            delbutton: true,
+                            delOptions: {
+                                url: "@Url.Action("DeleteUser", "Home")"
+                            }
+                        }
+                    }
+                ],
+                //pager for grid
+                pager: $('#pager'),
+                //number of rows per page
+                rowNum: 10,
+                rowList: [10, 20, 50, 100],
+                //initial sorting column
+                sortname: 'Id',
+                //initial sorting direction
+                sortorder: 'asc',
+                //we want to display total records count
+                viewrecords: true,
+                width: 'auto',
+                autowidth: true,
+                shrinkToFit: true,
+                //height: 'auto',
+                hidegrid: false,
+                direction: "rtl",
+                gridview: true,
+                rownumbers: true,
+                loadComplete: function () {
+                    //change alternate rows color
+                    $("tr.jqgrow:odd").css("background", "#E0E0E0");
+                    resizeGrid();
+                },
+                loadError: function (xhr, st, err) {
+                    jQuery("#rsperror").html("Type: " + st + "; Response: " + xhr.status + " " + xhr.statusText);
+                }
+            }).navGrid(
+                '#pager',
+                //enabling buttons
+                { add: true, del: true, edit: true, search: false },
+                //edit option
+                {
+                    width: 'auto',
+                    reloadAfterSubmit: true, checkOnUpdate: true, checkOnSubmit: true,
+                    beforeShowForm: function (form) {
+                        centerDialog(form, $('#list'));
+                    },
+                    closeAfterEdit: true,
+                    afterSubmit: showServerSideErrors
+                    /*, beforeSubmit: function (posdata, obj) {
+                        //در حالت ویرایش رکورد، ورود کلمه عبور اختیاری است
+                        return [true, ""];
+                    }*/
+                    ,
+                    errorTextFormat: serverErrorTextFormat
+                },
+                //add options
+                {
+                    width: 'auto', url: '@Url.Action("AddUser", "Home")',
+                    reloadAfterSubmit: true, checkOnUpdate: true, checkOnSubmit: true,
+                    beforeShowForm: function (form) {
+                        centerDialog(form, $('#list'));
+                    },
+                    closeAfterAdd: true,
+                    afterSubmit: showServerSideErrors,
+                    beforeSubmit: function (postdata, obj) {
+                        //در حالت افزودن رکورد، ورود کلمه عبور اجباری است
+                        if (postdata.Password == null || postdata.Password == "" || postdata.Password == undefined)
+                            return [false, "لطفا کلمه عبور را وارد کنید"];
+                        return [true, ""];
+                    },
+                    errorTextFormat: serverErrorTextFormat
+                },
+                //delete options
+                {
+                    url: '@Url.Action("DeleteUser", "Home")',
+                    reloadAfterSubmit: true
+                })
+                .jqGrid('gridResize', { minWidth: 400, minHeight: 150 })
+                .jqGrid('inlineNav', '#pager',
+                {
+                    edit: true, add: true, save: true, cancel: true,
+                    edittext: "ویرایش", addtext: "جدید", savetext: "ذخیره", canceltext: "لغو",
+                    addParams: {
+                        // اگر می‌خواهید ردیف‌های جدید در ابتدا ظاهر شوند، این سطر را حذف کنید
+                        position: "last", //ردیف‌های جدید در آخر ظاهر می‌شوند
+                        rowID: '_empty',
+                        useDefValues: true,
+                        addRowParams: getInlineNavParams(true)
+                    },
+                    editParams: getInlineNavParams(false)
+                });
+        });
+
+        function getInlineNavParams(isAdd) {
+            return {
+                // استفاده از آدرس‌های مختلف برای حالات ویرایش و ثبت اطلاعات جدید
+                url: isAdd ? '@Url.Action("AddUser", "Home")' : '@Url.Action("EditUser","Home")',
+                key: true,
+                restoreAfterError: false, // این مورد سبب می‌شود تا اعتبارسنجی سمت سرور قابل اعمال شود
+                oneditfunc: function (rowId) {
+                    // نمایش دکمه‌های ذخیره و لغو داخل همان سطر
+                    $("#jSaveButton_" + rowId).show();
+                    $("#jCancelButton_" + rowId).show();
+                },
+                successfunc: function () {
+                    var $self = $(this);
+                    setTimeout(function () {
+                        $self.trigger("reloadGrid"); // دریافت کلید اصلی ردیف از سرور
+                    }, 50);
+                },
+                errorfunc: function (rowid, response, stat) {
+                    if (stat != 'error') // this.Response.StatusCode == 200
+                        return;
+
+                    var result = $.parseJSON(response.responseText);
+                    if (result.success === false) {
+                        //نمایش خطای اعتبار سنجی سمت سرور پس از ویرایش یا افزودن
+                        $.jgrid.info_dialog($.jgrid.errors.errcap,
+                            '<div class="ui-state-error">' + result.message + '</div>',
+                            $.jgrid.edit.bClose,
+                            { buttonalign: 'center' });
+                    }
+                }
+            };
+        }
+        
+        function serverErrorTextFormat (response) {
+            // در حالتیکه وضعیت خروجی از سرور 200 نیست فراخوانی می‌شود
+            var result = $.parseJSON(response.responseText);
+            if (result.success === false) {
+                return result.message;
+            }
+            return "لطفا ورودی‌های وارد شده را بررسی کنید";
+        }
+
+        function showServerSideErrors(response, postdata) {
+            var result = $.parseJSON(response.responseText);
+            if (result.success === false) {
+                //نمایش خطای اعتبار سنجی سمت سرور پس از ویرایش یا افزودن
+                //و همچنین جلوگیری از ثبت نهایی فرم
+                return [false, result.message, result.id];
+            }
+
+            return [true, "", result.id];
+        }
+
+        function centerDialog(form, grid) {
+            var dlgDiv = $("#editmod" + grid[0].id);
+            var parentDiv = dlgDiv.parent(); // div#gbox_list
+            var dlgWidth = dlgDiv.width();
+            var parentWidth = parentDiv.width();
+            var dlgHeight = dlgDiv.height();
+            var parentHeight = parentDiv.height();
+            var parentTop = parentDiv.offset().top;
+            var parentLeft = parentDiv.offset().left;
+            dlgDiv[0].style.top = Math.round(parentTop + (parentHeight - dlgHeight) / 2) + "px";
+            dlgDiv[0].style.left = Math.round(parentLeft + (parentWidth - dlgWidth) / 2) + "px";
+        }
+    </script>
+}

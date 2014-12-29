@@ -1,0 +1,41 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    font-family: tahoma;
+    font-size: 9pt;
+}
+
+.ui-widget {
+    font-family: Tahoma !important;
+    font-size: 9pt !important;
+}
+
+/*how to move jQuery dialog close (X) button from right to left*/
+.ui-jqgrid .ui-jqgrid-caption-rtl {
+    text-align: center !important;
+}
+
+.ui-dialog .ui-dialog-titlebar-close {
+    left: .3em !important;
+}
+
+.ui-dialog .ui-dialog-title {
+    margin: .1em 0 .1em .8em !important;
+    direction: rtl !important;
+    float: right !important;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+    font-family: tahoma;
+    font-size: 9pt;
+}

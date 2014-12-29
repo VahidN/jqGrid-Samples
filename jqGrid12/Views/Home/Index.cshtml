@@ -1,0 +1,203 @@
+﻿@using jqGrid12.Models
+@using JqGridHelper.Utils
+@{
+    ViewBag.Title = "Index";
+}
+
+<div dir="rtl" id="grid1" style="width:100%; height: 100%" align="center">
+    <div id="rsperror"></div>
+    <table id="list" cellpadding="0" cellspacing="0"></table>
+    <div id="pager" style="text-align:center;"></div>
+</div>
+
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            // Responsive jqGrid
+            $(window).bind('resize', function () {
+                resizeGrid("#list","#grid1");
+            }).trigger('resize');
+
+            $.jgrid.formatter.integer.thousandsSeparator = ',';
+            $.jgrid.formatter.number.thousandsSeparator = ',';
+            $.jgrid.formatter.currency.thousandsSeparator = ',';
+
+            $('#list').jqGrid({
+                caption: "آزمایش دوازدهم",
+                autoencode: true, //security - anti-XSS
+                //url from wich data should be requested
+                url: '@Url.Action("GetOrders","Home")',
+                //type of data
+                datatype: 'json',
+                jsonReader: {
+                    root: "Rows",
+                    page: "Page",
+                    total: "Total",
+                    records: "Records",
+                    repeatitems: true,
+                    userdata: "UserData",
+                    id: "Id",
+                    cell: "RowCells",
+                    subgrid: { root: "Rows", repeatitems: true, cell: "RowCells" }
+                },
+                //url access method type
+                mtype: 'GET',
+                //columns names
+                colNames: ['شماره', 'تاریخ', 'تعداد اقلام', 'جمع کل'],
+                //columns model
+                colModel: [
+                    {
+                        name: '@(StronglyTyped.PropertyName<Order>(x=>x.Id))',
+                        index: '@(StronglyTyped.PropertyName<Order>(x => x.Id))', align: 'center',
+                        width: 40, hidden: true, key: true
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Order>(x => x.AddDateTime))',
+                        index: '@(StronglyTyped.PropertyName<Order>(x => x.AddDateTime))',
+                        align: 'center', width: 100
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Order>(x => x.ItemsCount))',
+                        index: '@(StronglyTyped.PropertyName<Order>(x => x.ItemsCount))',
+                        align: 'center', width: 100
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Order>(x=>x.TotalPrice))',
+                        index: '@(StronglyTyped.PropertyName<Order>(x => x.TotalPrice))', align: 'center', width: 100,
+                        formatter: 'currency',
+                        formatoptions:
+                        {
+                           decimalSeparator: '.', thousandsSeparator: ',', decimalPlaces: 2, prefix: '$'
+                        }
+                    }
+                ],
+                //pager for grid
+                pager: $('#pager'),
+                //number of rows per page
+                rowNum: 10,
+                rowList: [10, 20, 50, 100],
+                //initial sorting column
+                sortname: 'Id',
+                //initial sorting direction
+                sortorder: 'asc',
+                //we want to display total records count
+                viewrecords: true,
+                width: 'auto',
+                shrinkToFit: true,
+                height: 'auto',
+                hidegrid: false,
+                direction: "rtl",
+                gridview: true,
+                rownumbers: true,
+                loadComplete: function () {
+                    //change alternate rows color
+                    $("tr.jqgrow:odd").css("background", "#E0E0E0");
+                    resizeGrid("#list", "#grid1");
+                },
+                loadError: function (xhr, st, err) {
+                    jQuery("#rsperror").html("Type: " + st + "; Response: " + xhr.status + " " + xhr.statusText);
+                },
+
+                subGrid: true,
+                subGridRowExpanded: grid1RowExpanded
+
+            }).jqGrid('gridResize', { minWidth: 400 });
+        });
+
+        function resizeGrid(targetGrid, targetContainer) {
+            $(targetGrid).setGridWidth($(targetContainer).width() - 2, true);
+        }
+
+        function grid1RowExpanded(subGridId, rowId) {
+            var subgridTableId = subGridId + "_t";
+            var pagerId = "p_" + subgridTableId;
+            var container = 'g_' + subGridId;
+            $("#" + subGridId).html('<div dir="rtl" id="' + container + '" style="width:100%; height: 100%">' +
+                '<table id="' + subgridTableId + '" class="scroll"></table><div id="'
+                + pagerId + '" class="scroll"></div>');
+
+            var url = '@Url.Action("GetOrderDetails", "Home", routeValues: new { id = "js-id" })'
+                      .replace("js-id", encodeURIComponent(rowId)); // تزریق اطلاعات سمت کاربر به خروجی سمت سرور
+
+            $("#" + subgridTableId).jqGrid({
+                caption: "ریز اقلام سفارش " + rowId,
+                autoencode: true, //security - anti-XSS
+                //url from wich data should be requested
+                url: url,
+                //type of data
+                datatype: 'json',
+                jsonReader: {
+                    root: "Rows",
+                    page: "Page",
+                    total: "Total",
+                    records: "Records",
+                    repeatitems: true,
+                    userdata: "UserData",
+                    id: "Id",
+                    cell: "RowCells",
+                    subgrid: { root: "Rows", repeatitems: true, cell: "RowCells" }
+                },
+                //url access method type
+                mtype: 'GET',
+                //columns names
+                colNames: ['شماره', 'محصول', 'واحد', 'قیمت'],
+                //columns model
+                colModel: [
+                    {
+                        name: '@(StronglyTyped.PropertyName<OrderDetail>(x=>x.Id))',
+                        index: '@(StronglyTyped.PropertyName<OrderDetail>(x => x.Id))', align: 'center', width: 40
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<OrderDetail>(x => x.Product))',
+                        index: '@(StronglyTyped.PropertyName<OrderDetail>(x => x.Product))',
+                        align: 'center', width: 100
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<OrderDetail>(x => x.Unit))',
+                        index: '@(StronglyTyped.PropertyName<OrderDetail>(x => x.Unit))',
+                        align: 'center', width: 100
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<OrderDetail>(x => x.Price))',
+                        index: '@(StronglyTyped.PropertyName<OrderDetail>(x => x.Price))', align: 'center', width: 100,
+                        formatter: 'currency',
+                        formatoptions:
+                        {
+                            decimalSeparator: '.', thousandsSeparator: ',', decimalPlaces: 2, prefix: '$'
+                        }
+                    }
+                ],
+                //pager for grid
+                pager: $('#' + pagerId),
+                //number of rows per page
+                rowNum: 10,
+                rowList: [10, 20, 50, 100],
+                //initial sorting column
+                sortname: 'Id',
+                //initial sorting direction
+                sortorder: 'asc',
+                //we want to display total records count
+                viewrecords: true,
+                width: 'auto',
+                shrinkToFit: true,
+                height: 'auto',
+                hidegrid: false,
+                direction: "rtl",
+                gridview: true,
+                rownumbers: true,
+                loadComplete: function () {
+                    //change alternate rows color
+                    $("tr.jqgrow:odd").css("background", "#E0E0E0");
+                    //resizeGrid("#" + subgridTableId, "#" + container);
+                },
+                loadError: function (xhr, st, err) {
+                    jQuery("#rsperror").html("Type: " + st + "; Response: " + xhr.status + " " + xhr.statusText);
+                }
+            }).jqGrid('gridResize', { minWidth: 400 });
+        }
+
+    </script>
+}

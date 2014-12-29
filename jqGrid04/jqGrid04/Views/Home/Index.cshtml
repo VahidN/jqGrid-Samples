@@ -1,0 +1,249 @@
+﻿@using jqGrid04.Models
+@using JqGridHelper.Utils
+@{
+    ViewBag.Title = "Index";
+}
+
+@Html.AntiForgeryToken()
+
+<div dir="rtl" align="center">
+    <div id="rsperror"></div>
+    <table id="list" cellpadding="0" cellspacing="0"></table>
+    <div id="pager" style="text-align:center;"></div>
+</div>
+
+
+<div dir="rtl" align="center">
+    <fieldset style="width: 400px">
+        <legend>روش ویرایش</legend>
+        <input type="radio" name="rdEditApproach" onclick="inlineEdit();" /> داخل ردیف
+        <input type="radio" name="rdEditApproach" onclick="formEdit();" /> به صورت فرم<br /><br />
+    </fieldset>
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            var securityToken = $('[name=__RequestVerificationToken]').val();
+            $('body').bind('ajaxSend', function (elm, xhr, s) {
+                if (s.type === 'POST' && typeof securityToken != 'undefined') {
+                    if (s.data.length > 0) {
+                        s.data += "&__RequestVerificationToken=" + encodeURIComponent(securityToken);
+                    }
+                    else {
+                        s.data = "__RequestVerificationToken=" + encodeURIComponent(securityToken);
+                    }
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            $.jgrid.formatter.integer.thousandsSeparator = ',';
+            $.jgrid.formatter.number.thousandsSeparator = ',';
+            $.jgrid.formatter.currency.thousandsSeparator = ',';
+
+            $('#list').jqGrid({
+                caption: "آزمایش چهارم",
+                //url from wich data should be requested
+                url: '@Url.Action("GetProducts","Home")',
+                //url for edit operation
+                editurl: '@Url.Action("EditProduct","Home")',
+                //type of data
+                datatype: 'json',
+                jsonReader: {
+                    root: "Rows",
+                    page: "Page",
+                    total: "Total",
+                    records: "Records",
+                    repeatitems: true,
+                    userdata: "UserData",
+                    id: "Id",
+                    cell: "RowCells"
+                },
+                //url access method type
+                mtype: 'POST',
+                //columns names
+                colNames: ['شماره', 'نام محصول', 'تولید کننده', 'گروه', 'قیمت', ' '],
+                //columns model
+                colModel: [
+                    {
+                        name: '@(StronglyTyped.PropertyName<Product>(x=>x.Id))',
+                        index: '@(StronglyTyped.PropertyName<Product>(x=>x.Id))',
+                        align: 'right', width: 70,
+                        editable: false, hidden: true, key: true
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Product>(x=>x.Name))',
+                        index: '@(StronglyTyped.PropertyName<Product>(x=>x.Name))',
+                        align: 'right', width: 100,
+                        editable: true, edittype: 'text',
+                        editoptions: {
+                            maxlength: 40
+                        },
+                        editrules: {
+                            required: true
+                        }
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Product>(x=>x.Supplier.Id))',
+                        index: '@(StronglyTyped.PropertyName<Product>(x=>x.Supplier.Id))',
+                        align: 'right', width: 110,
+                        editable: true, edittype: 'select',
+                        editoptions: {
+                            dataUrl: '@Url.Action("SuppliersSelect","Home")'
+                        },
+                        editrules: {
+                            required: true
+                        }
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Product>(x=>x.Category.Id))',
+                        index: '@(StronglyTyped.PropertyName<Product>(x=>x.Category.Id))',
+                        align: 'right', width: 110,
+                        editable: true, edittype: 'select',
+                        editoptions: {
+                            dataUrl: '@Url.Action("CategoriesSelect","Home")'
+                        },
+                        editrules: {
+                            required: true
+                        }
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Product>(x=>x.Price))',
+                        index: '@(StronglyTyped.PropertyName<Product>(x=>x.Price))',
+                        align: 'center', width: 100,
+                        formatter: 'currency',
+                        formatoptions:
+                        {
+                            decimalSeparator: '.',
+                            thousandsSeparator: ',',
+                            decimalPlaces: 2,
+                            prefix: '$'
+                        },
+                        editable: true, edittype: 'text',
+                        editrules: {
+                            required: true,
+                            number: true,
+                            minValue: 0
+                        }
+                    },
+                    {
+                        name: 'myac', width: 80, fixed: true, sortable: false,
+                        resize: false, formatter: 'actions',
+                        formatoptions: {
+                            keys: true,
+                            delbutton: true,
+                            delOptions: {
+                                url: '@Url.Action("DeleteProduct","Home")'
+                            }
+                        }
+                    }
+                ],
+                //pager for grid
+                pager: $('#pager'),
+                //number of rows per page
+                rowNum: 10,
+                rowList: [10, 20, 50, 100],
+                //initial sorting column
+                sortname: 'Id',
+                //initial sorting direction
+                sortorder: 'asc',
+                //we want to display total records count
+                viewrecords: true,
+                width: '500',
+                shrinkToFit: false,
+                height: 'auto',
+                hidegrid: false,
+                direction: "rtl",
+                gridview: true,
+                rownumbers: true,
+                loadComplete: function () {
+                    //change alternate rows color
+                    $("tr.jqgrow:odd").css("background", "#E0E0E0");
+                },
+                loadError: function (xhr, st, err) {
+                    jQuery("#rsperror").html("Type: " + st + "; Response: " + xhr.status + " " + xhr.statusText);
+                },
+                multiselect: true
+            }).jqGrid('gridResize', { minWidth: 400 });
+        });
+
+        var lastSel;
+        function inlineEdit() {
+            $('input[name=rdEditApproach]').attr('disabled', true);
+            $('#list').navGrid(
+                '#pager',
+                //enabling buttons
+                { add: true, del: true, edit: false, search: false },
+                //edit options
+                {},
+                //add options
+                { width: 'auto', url: '@Url.Action("AddProduct","Home")' },
+            //delete options
+            { url: '@Url.Action("DeleteProduct","Home")' }
+        );
+            //add onSelectRow event to support inline edit
+            $('#list').setGridParam({
+                onSelectRow: function (id) {
+                    if (id && id != lastSel) {
+                        //save changes in row
+                        $('#list').saveRow(lastSel, false);
+                        lastSel = id;
+                    }
+                    //trigger inline edit for row
+                    $('#list').editRow(id, true);
+                }
+            });
+        };
+
+        function formEdit() {
+            $('input[name=rdEditApproach]').attr('disabled', true);
+            $('#list').navGrid(
+                    '#pager',
+                    //enabling buttons
+                    { add: true, del: true, edit: true, search: false },
+                    //edit option
+                    {
+                        width: 'auto', checkOnUpdate: true, checkOnSubmit: true,
+                        beforeShowForm: function (form) {
+                            centerDialog(form, $('#list'));
+                        }
+                    },
+                    //add options
+                    {
+                        width: 'auto', url: '@Url.Action("AddProduct","Home")',
+                        reloadAfterSubmit: true, checkOnUpdate: true, checkOnSubmit: true,
+                        beforeShowForm: function (form) {
+                            centerDialog(form, $('#list'));
+                        }
+                    },
+                    //delete options
+                    {
+                        url: '@Url.Action("DeleteProduct","Home")', reloadAfterSubmit: true
+                    })
+                .jqGrid('navButtonAdd', "#pager", {
+                    caption: "حذف ردیف‌های انتخابی", title: "Delete Toolbar", buttonicon: 'ui-icon ui-icon-trash',
+                    onClickButton: function () {
+                        var idsList = jQuery("#list").jqGrid('getGridParam', 'selarrrow');
+                        alert(idsList);
+                        //jQuery("#list").jqGrid('delGridRow',idsList,{reloadAfterSubmit:false});
+                    }
+                });
+        };
+
+        function centerDialog(form, grid) {
+            var dlgDiv = $("#editmod" + grid[0].id);
+            var parentDiv = dlgDiv.parent(); // div#gbox_list
+            var dlgWidth = dlgDiv.width();
+            var parentWidth = parentDiv.width();
+            var dlgHeight = dlgDiv.height();
+            var parentHeight = parentDiv.height();
+            var parentTop = parentDiv.offset().top;
+            var parentLeft = parentDiv.offset().left;
+            dlgDiv[0].style.top = Math.round(parentTop + (parentHeight - dlgHeight) / 2) + "px";
+            dlgDiv[0].style.left = Math.round(parentLeft + (parentWidth - dlgWidth) / 2) + "px";
+        }
+    </script>
+}

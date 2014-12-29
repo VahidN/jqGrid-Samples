@@ -1,0 +1,22 @@
+﻿namespace jqGrid11.Models
+{
+    public class Product
+    {
+        public int Id { set; get; }
+        public string Name { set; get; }
+        public decimal Price { set; get; }
+        public Supplier Supplier { set; get; }
+    }
+
+    public class Supplier
+    {
+	public int Id { set; get; }
+        public string CompanyName { set; get; }
+        public string Address { set; get; }
+        public string PostalCode { set; get; }
+        public string City { set; get; }
+        public string Country { set; get; }
+        public string Phone { set; get; }
+        public string HomePage { set; get; }
+    }
+}

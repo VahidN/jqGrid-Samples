@@ -1,0 +1,19 @@
+﻿@using System.Globalization
+@model DateTime?
+@{
+    Func<DateTime, string> toPersianDate = date =>
+    {
+        var dateTime = new DateTime(date.Year, date.Month, date.Day, new GregorianCalendar());
+        var persianCalendar = new PersianCalendar();
+        return persianCalendar.GetYear(dateTime) + "/" + 
+               persianCalendar.GetMonth(dateTime).ToString("00") + "/" + 
+               persianCalendar.GetDayOfMonth(dateTime).ToString("00");
+    };
+    var today = toPersianDate(DateTime.Now);
+    var name = this.ViewContext.ViewData.ModelMetadata.PropertyName;
+    var value = Model.HasValue ? toPersianDate(Model.Value) : string.Empty;
+}
+<input type="text" dir="ltr" 
+       name="@name" id="@name" 
+       value="@value" 
+       onclick="PersianDatePicker.Show(this,'@today');" />
