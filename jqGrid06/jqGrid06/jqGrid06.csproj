@@ -45,6 +45,10 @@
       <HintPath>..\..\packages\PdfReport.2.5\lib\EPPlus.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="FluentValidationNA, Version=1.2.16.24816, Culture=neutral, PublicKeyToken=0950390b87309e14, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\FluentValidationNA.1.2.16\lib\net40\FluentValidationNA.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="itextsharp">
       <HintPath>..\..\packages\PdfReport.2.5\lib\itextsharp.dll</HintPath>
       <Private>True</Private>
@@ -68,6 +72,10 @@
     </Reference>
     <Reference Include="PdfRpt">
       <HintPath>..\..\packages\PdfReport.2.5\lib\PdfRpt.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Linq.Dynamic, Version=1.1.14.15853, Culture=neutral, PublicKeyToken=b72be0322d1b32a8, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Linq.Dynamic.Library.1.1.14\lib\net40\System.Linq.Dynamic.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.DynamicData" />

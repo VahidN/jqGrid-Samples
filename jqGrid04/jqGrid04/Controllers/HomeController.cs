@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Web.Mvc;
 using jqGrid04.Models;
-using JqGridHelper.DynamicSearch;
+using System.Linq.Dynamic; //Import the Dynamic LINQ library
 using JqGridHelper.Models;
 
 namespace jqGrid04.Controllers

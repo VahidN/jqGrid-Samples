@@ -7,6 +7,7 @@ using System.Threading;
 using JqGridHelper.Models;
 using JqGridHelper.Utils;
 using Newtonsoft.Json;
+using System.Linq.Dynamic; //Import the Dynamic LINQ library
 
 namespace JqGridHelper.DynamicSearch
 {
@@ -38,8 +39,8 @@ namespace JqGridHelper.DynamicSearch
         }
 
         private static readonly Dictionary<string, string> _whereOperation =
-                     new Dictionary<string, string>  
-	                 {  
+                     new Dictionary<string, string>
+	                 {
                         {"in" , " {0} = @{1} "},//is in
                         {"eq" , " {0} = @{1} "},
                         {"ni" , " {0} != @{1} "},//is not in
@@ -60,26 +61,26 @@ namespace JqGridHelper.DynamicSearch
         /// هر اپراتوری را به هر نوع داده‌ای نمی‌توان اعمال کرد
         /// </summary>
         private static readonly Dictionary<string, string> _validOperators =
-                     new Dictionary<string, string>  
-	                 {  
-	                     { "Object"   ,  "" },   
-	                     { "Boolean"  ,  "eq:ne:" },   
-	                     { "Char"     ,  "" },   
-	                     { "String"   ,  "eq:ne:lt:le:gt:ge:bw:bn:cn:nc:" },   
-	                     { "SByte"    ,  "" },   
-	                     { "Byte"     ,  "eq:ne:lt:le:gt:ge:" },  
-	                     { "Int16"    ,  "eq:ne:lt:le:gt:ge:" },   
-	                     { "UInt16"   ,  "" },   
-	                     { "Int32"    ,  "eq:ne:lt:le:gt:ge:" },   
-	                     { "UInt32"   ,  "" },   
-	                     { "Int64"    ,  "eq:ne:lt:le:gt:ge:" },   
-	                     { "UInt64"   ,  "" },   
-	                     { "Decimal"  ,  "eq:ne:lt:le:gt:ge:" },   
-	                     { "Single"   ,  "eq:ne:lt:le:gt:ge:" },   
-	                     { "Double"   ,  "eq:ne:lt:le:gt:ge:" },   
-	                     { "DateTime" ,  "eq:ne:lt:le:gt:ge:" },   
-	                     { "TimeSpan" ,  "" },   
-	                     { "Guid"     ,  "" }  
+                     new Dictionary<string, string>
+	                 {
+	                     { "Object"   ,  "" },
+	                     { "Boolean"  ,  "eq:ne:" },
+	                     { "Char"     ,  "" },
+	                     { "String"   ,  "eq:ne:lt:le:gt:ge:bw:bn:cn:nc:" },
+	                     { "SByte"    ,  "" },
+	                     { "Byte"     ,  "eq:ne:lt:le:gt:ge:" },
+	                     { "Int16"    ,  "eq:ne:lt:le:gt:ge:" },
+	                     { "UInt16"   ,  "" },
+	                     { "Int32"    ,  "eq:ne:lt:le:gt:ge:" },
+	                     { "UInt32"   ,  "" },
+	                     { "Int64"    ,  "eq:ne:lt:le:gt:ge:" },
+	                     { "UInt64"   ,  "" },
+	                     { "Decimal"  ,  "eq:ne:lt:le:gt:ge:" },
+	                     { "Single"   ,  "eq:ne:lt:le:gt:ge:" },
+	                     { "Double"   ,  "eq:ne:lt:le:gt:ge:" },
+	                     { "DateTime" ,  "eq:ne:lt:le:gt:ge:" },
+	                     { "TimeSpan" ,  "" },
+	                     { "Guid"     ,  "eq:ne:" }
 	                 };
 
         private int _parameterIndex;
@@ -107,12 +108,12 @@ namespace JqGridHelper.DynamicSearch
 
             var type = typeof(T).FindFieldType(searchField);
             if (type == null)
-                throw new InvalidOperationException(searchField + " is not defined.");
+                throw new InvalidOperationException(string.Format("{0} is not defined.", searchField));
 
-            if (!_validOperators[type.Name].Contains(searchOper + ":"))
+            if (!_validOperators[type.Name].Contains(string.Format("{0}:", searchOper)))
             {
-                // این اپراتور روی نوع داده‌ای جاری کار نمی‌کند  
-                return null;
+                // این اپراتور روی نوع داده‌ای جاری کار نمی‌کند
+                throw new NotImplementedException(string.Format("{0} & {1} is not supported.", type.Name, searchOper));
             }
 
             if (type == typeof(decimal))
@@ -141,9 +142,15 @@ namespace JqGridHelper.DynamicSearch
                         dateTime = new DateTime(year, month, day, new PersianCalendar());
                         break;
                     default:
-                        throw new NotSupportedException(_dateTimeType + " is not supported.");
+                        throw new NotSupportedException(string.Format("{0} is not supported.", _dateTimeType));
                 }
                 return new Tuple<string, object>(getSearchOperator(searchOper, searchField, type), dateTime);
+            }
+
+            if (type == typeof(Guid))
+            {
+                var guid = new Guid(searchValue);
+                return new Tuple<string, object>(getSearchOperator(searchOper, searchField, type), guid);
             }
 
             var resultValue = Convert.ChangeType(searchValue, type);
@@ -193,7 +200,7 @@ namespace JqGridHelper.DynamicSearch
                     continue;
 
                 valuesList.Add(predicate.Item2);
-                filterExpression = filterExpression + predicate.Item1 + " " + groupOperator + " ";
+                filterExpression = string.Format("{0}{1} {2} ", filterExpression, predicate.Item1, groupOperator);
             }
 
             if (string.IsNullOrWhiteSpace(filterExpression))
@@ -228,7 +235,7 @@ namespace JqGridHelper.DynamicSearch
                         continue;
 
                     valuesList.Add(predicate.Item2);
-                    filterExpression = filterExpression + predicate.Item1 + " And ";
+                    filterExpression = string.Format("{0}{1} And ", filterExpression, predicate.Item1);
                 }
             }
 

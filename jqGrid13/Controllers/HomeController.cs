@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Web.Mvc;
 using jqGrid13.Models;
-using JqGridHelper.DynamicSearch; // for dynamic OrderBy
+using System.Linq.Dynamic; //Import the Dynamic LINQ library
 using JqGridHelper.Models;
 using JqGridHelper.Utils;
 
@@ -28,7 +28,7 @@ namespace jqGrid13.Controllers
             var totalPages = (int)Math.Ceiling(totalRecords / (float)pageSize);
 
             var productsQuery = list.AsQueryable();
-            
+
             if (nodeid == null)
             {
                 productsQuery = productsQuery.Where(x => x.ParentId == null);
@@ -53,7 +53,7 @@ namespace jqGrid13.Controllers
                 Rows = (products.Select(comment => new JqGridRowData
                 {
                     Id = comment.Id,
-                    RowCells = new List<object> 
+                    RowCells = new List<object>
                                {
                                    comment.Id,
                                    comment.Body,

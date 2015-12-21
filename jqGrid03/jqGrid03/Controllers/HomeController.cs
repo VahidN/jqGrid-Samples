@@ -6,6 +6,7 @@ using System.Web.Mvc;
 using jqGrid03.Models;
 using JqGridHelper.DynamicSearch;
 using JqGridHelper.Models;
+using System.Linq.Dynamic; //Import the Dynamic LINQ library
 
 namespace jqGrid03.Controllers
 {
@@ -48,7 +49,8 @@ namespace jqGrid03.Controllers
                                      product.Name,
                                      product.Supplier.CompanyName,
                                      product.Category.Name,
-                                     product.Price.ToString(CultureInfo.InvariantCulture)
+                                     product.Price.ToString(CultureInfo.InvariantCulture),
+                                     product.Code.ToString("D")
                                 }
                 })).ToArray()
             };

@@ -8,6 +8,7 @@ using jqGrid06.PdfReports;
 using JqGridHelper.DynamicSearch;
 using JqGridHelper.Models;
 using JqGridHelper.Utils;
+using System.Linq.Dynamic; //Import the Dynamic LINQ library
 
 namespace jqGrid06.Controllers
 {

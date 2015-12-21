@@ -1,4 +1,6 @@
-﻿namespace jqGrid03.Models
+﻿using System;
+
+namespace jqGrid03.Models
 {
     public class Product
     {
@@ -7,6 +9,7 @@
         public decimal Price { set; get; }
         public Supplier Supplier { set; get; }
         public Category Category { set; get; }
+        public Guid Code { set; get; }
     }
 
     public class Category

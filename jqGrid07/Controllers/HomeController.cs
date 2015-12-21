@@ -1,5 +1,5 @@
 using jqGrid07.Models;
-using JqGridHelper.DynamicSearch;
+using System.Linq.Dynamic; //Import the Dynamic LINQ library
 using JqGridHelper.Models;
 using System;
 using System.Collections.Generic;

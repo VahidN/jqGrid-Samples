@@ -24,16 +24,16 @@
 @section Scripts
 {
     <script type="text/javascript">
-    var searchOptions = ['eq', 'ne', 'lt', 'le', 'gt', 'ge', 'bw', 'bn', 'in', 'ni', 'ew', 'en', 'cn', 'nc'];
-    $(document).ready(function () {
-        $.jgrid.formatter.integer.thousandsSeparator = ',';
-        $.jgrid.formatter.number.thousandsSeparator = ',';
-        $.jgrid.formatter.currency.thousandsSeparator = ',';
+        var searchOptions = ['eq', 'ne', 'lt', 'le', 'gt', 'ge', 'bw', 'bn', 'in', 'ni', 'ew', 'en', 'cn', 'nc'];
+        $(document).ready(function () {
+            $.jgrid.formatter.integer.thousandsSeparator = ',';
+            $.jgrid.formatter.number.thousandsSeparator = ',';
+            $.jgrid.formatter.currency.thousandsSeparator = ',';
 
-        $('#list').jqGrid({
-            caption: "آزمایش سوم",
-            //url from wich data should be requested
-            url: '@Url.Action("GetProducts","Home")',
+            $('#list').jqGrid({
+                caption: "آزمایش سوم",
+                //url from wich data should be requested
+                url: '@Url.Action("GetProducts","Home")',
                 //type of data
                 datatype: 'json',
                 jsonReader: {
@@ -49,7 +49,7 @@
                 //url access method type
                 mtype: 'POST',
                 //columns names
-                colNames: ['شماره', 'نام محصول', 'تولید کننده', 'گروه', 'قیمت'],
+                colNames: ['شماره', 'نام محصول', 'تولید کننده', 'گروه', 'قیمت', 'كد' ],
                 //columns model
                 colModel: [
                     {
@@ -73,99 +73,105 @@
                         searchoptions:
                         {
                             sopt: searchOptions, dataUrl: '@Url.Action("SuppliersSelect","Home")'
-                    }
-                },
-                {
-                    name: '@(StronglyTyped.PropertyName<Product>(x=>x.Category.Id))',
-                    index: '@(StronglyTyped.PropertyName<Product>(x=>x.Category.Id))',
-                    align: 'right', width: 200,
-                    search: true, stype: 'select', edittype: 'select',
-                    searchoptions:
+                        }
+                    },
                     {
-                        sopt: searchOptions, dataUrl: '@Url.Action("CategoriesSelect","Home")'
-                    }
-                },
-                {
-                    name: '@(StronglyTyped.PropertyName<Product>(x=>x.Price))',
-                    index: '@(StronglyTyped.PropertyName<Product>(x=>x.Price))',
-                    align: 'center', width: 100,
-                    formatter: 'currency',
-                    formatoptions:
+                        name: '@(StronglyTyped.PropertyName<Product>(x=>x.Category.Id))',
+                        index: '@(StronglyTyped.PropertyName<Product>(x=>x.Category.Id))',
+                        align: 'right', width: 200,
+                        search: true, stype: 'select', edittype: 'select',
+                        searchoptions:
+                        {
+                            sopt: searchOptions, dataUrl: '@Url.Action("CategoriesSelect","Home")'
+                        }
+                    },
                     {
-                        decimalSeparator: '.', thousandsSeparator: ',', decimalPlaces: 2, prefix: '$'
+                        name: '@(StronglyTyped.PropertyName<Product>(x=>x.Price))',
+                        index: '@(StronglyTyped.PropertyName<Product>(x=>x.Price))',
+                        align: 'center', width: 100,
+                        formatter: 'currency',
+                        formatoptions:
+                        {
+                            decimalSeparator: '.', thousandsSeparator: ',', decimalPlaces: 2, prefix: '$'
+                        }
+                    },
+                    {
+                        name: '@(StronglyTyped.PropertyName<Product>(x=>x.Code))',
+                        index: '@(StronglyTyped.PropertyName<Product>(x => x.Code))',
+                        align: 'center', width: 200,
+                        search: true, stype: 'text', searchoptions: { sopt: ['eq', 'ne'] }
                     }
+                ],
+                //pager for grid
+                pager: $('#pager'),
+                //number of rows per page
+                rowNum: 10,
+                rowList: [10, 20, 50, 100],
+                //initial sorting column
+                sortname: 'Id',
+                //initial sorting direction
+                sortorder: 'asc',
+                //we want to display total records count
+                viewrecords: true,
+                width: '500',
+                shrinkToFit: false,
+                height: 'auto',
+                hidegrid: false,
+                direction: "rtl",
+                gridview: true,
+                rownumbers: true,
+                loadComplete: function () {
+                    //change alternate rows color
+                    $("tr.jqgrow:odd").css("background", "#E0E0E0");
+                },
+                loadError: function (xhr, st, err) {
+                    jQuery("#rsperror").html("Type: " + st + "; Response: " + xhr.status + " " + xhr.statusText);
                 }
-            ],
-            //pager for grid
-            pager: $('#pager'),
-            //number of rows per page
-            rowNum: 10,
-            rowList: [10, 20, 50, 100],
-            //initial sorting column
-            sortname: 'Id',
-            //initial sorting direction
-            sortorder: 'asc',
-            //we want to display total records count
-            viewrecords: true,
-            width: '500',
-            shrinkToFit: false,
-            height: 'auto',
-            hidegrid: false,
-            direction: "rtl",
-            gridview: true,
-            rownumbers: true,
-            loadComplete: function () {
-                //change alternate rows color
-                $("tr.jqgrow:odd").css("background", "#E0E0E0");
-            },
-            loadError: function (xhr, st, err) {
-                jQuery("#rsperror").html("Type: " + st + "; Response: " + xhr.status + " " + xhr.statusText);
-            }
-        })
-        .jqGrid('navGrid', '#pager',
-            { add: false, edit: false, del: false },
-            {},  // default settings for edit
-            {},  // default settings for add
-            {},  // delete instead that del:false we need this
-            {
-                // search options
-                multipleSearch: true,
-                closeOnEscape: true,
-                closeAfterSearch: true,
-                ignoreCase: true,
-                sopt: searchOptions
             })
-        .jqGrid('navButtonAdd', "#pager", {
-            caption: "نوار ابزار جستجو", title: "Search Toolbar", buttonicon: 'ui-icon-search',
-            onClickButton: function () {
-                toolbarSearching();
-            }
-        }).jqGrid('gridResize', { minWidth: 400 });
-    });
-
-
-    function toolbarSearching() {
-        $('#list').filterToolbar({
-            groupOp: 'OR',
-            defaultSearch: "cn",
-            autosearch: true,
-            searchOnEnter: true,
-            searchOperators: true, // فعال سازی منوی اپراتورها
-            stringResult: true // وجود این سطر سبب می‌شود تا اپراتورها به سرور ارسال شوند
+            .jqGrid('navGrid', '#pager',
+                { add: false, edit: false, del: false },
+                {},  // default settings for edit
+                {},  // default settings for add
+                {},  // delete instead that del:false we need this
+                {
+                    // search options
+                    multipleSearch: true,
+                    closeOnEscape: true,
+                    closeAfterSearch: true,
+                    ignoreCase: true,
+                    sopt: searchOptions
+                })
+            .jqGrid('navButtonAdd', "#pager", {
+                caption: "نوار ابزار جستجو", title: "Search Toolbar", buttonicon: 'ui-icon-search',
+                onClickButton: function () {
+                    toolbarSearching();
+                }
+            }).jqGrid('gridResize', { minWidth: 400 });
         });
-    };
 
-    function singleSearching() {
-        $('#list').searchGrid({
-            closeAfterSearch: true
-        });
-    };
 
-    function advancedSearching() {
-        $('#list').searchGrid({
-            multipleSearch: true,
-            closeAfterSearch: true
-        });
-    };
+        function toolbarSearching() {
+            $('#list').filterToolbar({
+                groupOp: 'OR',
+                defaultSearch: "cn",
+                autosearch: true,
+                searchOnEnter: true,
+                searchOperators: true, // فعال سازی منوی اپراتورها
+                stringResult: true // وجود این سطر سبب می‌شود تا اپراتورها به سرور ارسال شوند
+            });
+        };
+
+        function singleSearching() {
+            $('#list').searchGrid({
+                closeAfterSearch: true
+            });
+        };
+
+        function advancedSearching() {
+            $('#list').searchGrid({
+                multipleSearch: true,
+                closeAfterSearch: true
+            });
+        };
     </script>
 }

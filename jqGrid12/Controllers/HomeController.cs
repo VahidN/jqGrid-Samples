@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Web.Mvc;
 using jqGrid12.Models;
-using JqGridHelper.DynamicSearch; // for dynamic OrderBy
+using System.Linq.Dynamic; //Import the Dynamic LINQ library
 using JqGridHelper.Models;
 using JqGridHelper.Utils;
 
@@ -40,7 +40,7 @@ namespace jqGrid12.Controllers
                 Rows = (products.Select(order => new JqGridRowData
                 {
                     Id = order.Id,
-                    RowCells = new List<object> 
+                    RowCells = new List<object>
                                                     {
                                                         order.Id.ToString(CultureInfo.InvariantCulture),
                                                         order.AddDateTime.ToPersianDate(),
@@ -80,7 +80,7 @@ namespace jqGrid12.Controllers
                 Rows = (orderDetails.Select(detail => new JqGridRowData
                 {
                     Id = detail.Id,
-                    RowCells = new List<object> 
+                    RowCells = new List<object>
                                                     {
                                                         detail.Id.ToString(CultureInfo.InvariantCulture),
                                                         detail.Product,

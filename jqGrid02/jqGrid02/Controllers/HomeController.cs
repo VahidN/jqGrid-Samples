@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Web.Mvc;
 using jqGrid02.Models;
-using JqGridHelper.DynamicSearch; // for dynamic OrderBy
+using System.Linq.Dynamic; //Import the Dynamic LINQ library
 using JqGridHelper.Models;
 
 namespace jqGrid02.Controllers
@@ -39,7 +39,7 @@ namespace jqGrid02.Controllers
                 Rows = (products.Select(product => new JqGridRowData
                                                 {
                                                     Id = product.Id,
-                                                    RowCells = new List<object> 
+                                                    RowCells = new List<object>
                                                     {
                                                         product.Id.ToString(CultureInfo.InvariantCulture),
                                                         product.Name,

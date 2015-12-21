@@ -5,7 +5,7 @@ using System.Linq;
 using System.Web.Mvc;
 using jqGrid09.Models;
 using JqGridHelper.Models;
-using JqGridHelper.DynamicSearch;
+using System.Linq.Dynamic; //Import the Dynamic LINQ library
 
 namespace jqGrid09.Controllers
 {

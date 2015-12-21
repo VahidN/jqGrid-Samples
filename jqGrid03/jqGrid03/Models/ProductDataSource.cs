@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace jqGrid03.Models
 {
@@ -20,7 +21,7 @@ namespace jqGrid03.Models
 
         /// <summary>
         /// هدف صرفا تهیه یک منبع داده آزمایشی ساده تشکیل شده در حافظه است
-        /// </summary>        
+        /// </summary>
         private static IList<Product> createProductsDataSource()
         {
             var list = new List<Product>();
@@ -31,6 +32,7 @@ namespace jqGrid03.Models
                     Id = i + 1,
                     Name = "نام " + (i + 1),
                     Price = i * 1000,
+                    Code = Guid.NewGuid(),
                     Supplier = new Supplier
                     {
                         Id = i + 1,
