@@ -9,7 +9,7 @@ namespace jqGrid03.Models
         public decimal Price { set; get; }
         public Supplier Supplier { set; get; }
         public Category Category { set; get; }
-        public Guid Code { set; get; }
+        public Guid? Code { set; get; }
     }
 
     public class Category

@@ -26,10 +26,55 @@ namespace JqGridHelper.DynamicSearch
     /// </summary>
     public class JqGridSearch
     {
+        /// <summary>
+        /// هر اپراتوری را به هر نوع داده‌ای نمی‌توان اعمال کرد
+        /// </summary>
+        private static readonly Dictionary<string, string> _validOperators =
+                     new Dictionary<string, string>
+					 {
+						 { "Object"   ,  "" },
+						 { "Boolean"  ,  "eq:ne:" },
+						 { "Char"     ,  "" },
+						 { "String"   ,  "eq:ne:lt:le:gt:ge:bw:bn:cn:nc:" },
+						 { "SByte"    ,  "" },
+						 { "Byte"     ,  "eq:ne:lt:le:gt:ge:" },
+						 { "Int16"    ,  "eq:ne:lt:le:gt:ge:" },
+						 { "UInt16"   ,  "" },
+						 { "Int32"    ,  "eq:ne:lt:le:gt:ge:" },
+						 { "UInt32"   ,  "" },
+						 { "Int64"    ,  "eq:ne:lt:le:gt:ge:" },
+						 { "UInt64"   ,  "" },
+						 { "Decimal"  ,  "eq:ne:lt:le:gt:ge:" },
+						 { "Single"   ,  "eq:ne:lt:le:gt:ge:" },
+						 { "Double"   ,  "eq:ne:lt:le:gt:ge:" },
+						 { "DateTime" ,  "eq:ne:lt:le:gt:ge:" },
+						 { "TimeSpan" ,  "" },
+						 { "Guid"     ,  "eq:ne:" }
+					 };
 
-        private readonly JqGridRequest _request;
-        private readonly NameValueCollection _form;
+        private static readonly Dictionary<string, string> _whereOperation =
+                     new Dictionary<string, string>
+					 {
+						{"in" , " {0} = @{1} "},//is in
+						{"eq" , " {0} = @{1} "},
+						{"ni" , " {0} != @{1} "},//is not in
+						{"ne" , " {0} != @{1} "},
+						{"lt" , " {0} < @{1} "},
+						{"le" , " {0} <= @{1} "},
+						{"gt" , " {0} > @{1} "},
+						{"ge" , " {0} >= @{1} "},
+						{"bw" , " {0}.StartsWith(@{1}) "},//begins with
+						{"bn" , " !{0}.StartsWith(@{1}) "},//does not begin with
+						{"ew" , " {0}.EndsWith(@{1}) "},//ends with
+						{"en" , " !{0}.EndsWith(@{1}) "},//does not end with
+						{"cn" , " {0}.Contains(@{1}) "},//contains
+						{"nc" , " !{0}.Contains(@{1}) "}//does not contain
+					 };
+
         private readonly DateTimeType _dateTimeType;
+        private readonly NameValueCollection _form;
+        private readonly JqGridRequest _request;
+        private int _parameterIndex;
 
         public JqGridSearch(JqGridRequest request, NameValueCollection form, DateTimeType dateTimeType)
         {
@@ -37,54 +82,6 @@ namespace JqGridHelper.DynamicSearch
             _form = form;
             _dateTimeType = dateTimeType;
         }
-
-        private static readonly Dictionary<string, string> _whereOperation =
-                     new Dictionary<string, string>
-	                 {
-                        {"in" , " {0} = @{1} "},//is in
-                        {"eq" , " {0} = @{1} "},
-                        {"ni" , " {0} != @{1} "},//is not in
-                        {"ne" , " {0} != @{1} "},
-                        {"lt" , " {0} < @{1} "},
-                        {"le" , " {0} <= @{1} "},
-                        {"gt" , " {0} > @{1} "},
-                        {"ge" , " {0} >= @{1} "},
-                        {"bw" , " {0}.StartsWith(@{1}) "},//begins with
-                        {"bn" , " !{0}.StartsWith(@{1}) "},//does not begin with
-                        {"ew" , " {0}.EndsWith(@{1}) "},//ends with
-                        {"en" , " !{0}.EndsWith(@{1}) "},//does not end with
-                        {"cn" , " {0}.Contains(@{1}) "},//contains
-                        {"nc" , " !{0}.Contains(@{1}) "}//does not contain
-	                 };
-
-        /// <summary>
-        /// هر اپراتوری را به هر نوع داده‌ای نمی‌توان اعمال کرد
-        /// </summary>
-        private static readonly Dictionary<string, string> _validOperators =
-                     new Dictionary<string, string>
-	                 {
-	                     { "Object"   ,  "" },
-	                     { "Boolean"  ,  "eq:ne:" },
-	                     { "Char"     ,  "" },
-	                     { "String"   ,  "eq:ne:lt:le:gt:ge:bw:bn:cn:nc:" },
-	                     { "SByte"    ,  "" },
-	                     { "Byte"     ,  "eq:ne:lt:le:gt:ge:" },
-	                     { "Int16"    ,  "eq:ne:lt:le:gt:ge:" },
-	                     { "UInt16"   ,  "" },
-	                     { "Int32"    ,  "eq:ne:lt:le:gt:ge:" },
-	                     { "UInt32"   ,  "" },
-	                     { "Int64"    ,  "eq:ne:lt:le:gt:ge:" },
-	                     { "UInt64"   ,  "" },
-	                     { "Decimal"  ,  "eq:ne:lt:le:gt:ge:" },
-	                     { "Single"   ,  "eq:ne:lt:le:gt:ge:" },
-	                     { "Double"   ,  "eq:ne:lt:le:gt:ge:" },
-	                     { "DateTime" ,  "eq:ne:lt:le:gt:ge:" },
-	                     { "TimeSpan" ,  "" },
-	                     { "Guid"     ,  "eq:ne:" }
-	                 };
-
-        private int _parameterIndex;
-
         public IQueryable<T> ApplyFilter<T>(IQueryable<T> query)
         {
             if (!_request._search)
@@ -101,37 +98,69 @@ namespace JqGridHelper.DynamicSearch
                     manageMultiFieldSearch(query) : manageToolbarSearch(query);
         }
 
+
+        private static bool isNullable(Type type)
+        {
+            return Nullable.GetUnderlyingType(type) != null;
+        }
+
+        private object getDefaultValue(Type t)
+        {
+            return t.IsValueType ? Activator.CreateInstance(t) : null;
+        }
+
         private Tuple<string, object> getPredicate<T>(string searchField, string searchOper, string searchValue)
         {
-            if (string.IsNullOrWhiteSpace(searchValue))
-                return null;
-
             var type = typeof(T).FindFieldType(searchField);
             if (type == null)
-                throw new InvalidOperationException(string.Format("{0} is not defined.", searchField));
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(searchValue))
+            {
+                var defaultValue = getDefaultValue(type);
+                searchValue = defaultValue == null ? "null" : defaultValue.ToString();
+            }
+
+            var searchOperator = getSearchOperator(searchOper, searchField, type, searchValue);
+
+            if (isNullable(type))
+            {
+                type = Nullable.GetUnderlyingType(type);
+            }
 
             if (!_validOperators[type.Name].Contains(string.Format("{0}:", searchOper)))
             {
-                // این اپراتور روی نوع داده‌ای جاری کار نمی‌کند
                 throw new NotImplementedException(string.Format("{0} & {1} is not supported.", type.Name, searchOper));
             }
 
             if (type == typeof(decimal))
             {
+                if (searchValue == "null")
+                {
+                    return new Tuple<string, object>(searchOperator, null);
+                }
+
                 decimal value;
                 if (decimal.TryParse(searchValue, NumberStyles.Any, Thread.CurrentThread.CurrentCulture, out value))
                 {
-                    return new Tuple<string, object>(getSearchOperator(searchOper, searchField, type), value);
+                    return new Tuple<string, object>(searchOperator, value);
                 }
             }
 
             if (type == typeof(DateTime))
             {
+                if (searchValue == "null")
+                {
+                    return new Tuple<string, object>(searchOperator, null);
+                }
+
                 DateTime dateTime;
                 switch (_dateTimeType)
                 {
                     case DateTimeType.Gregorian:
-                        dateTime = DateTime.Parse(searchValue);
+                        dateTime = DateTime.Parse(searchValue, CultureInfo.InvariantCulture);
                         break;
                     case DateTimeType.Persian:
                         var parts = searchValue.Split('/'); //ex. 1391/1/19
@@ -144,25 +173,40 @@ namespace JqGridHelper.DynamicSearch
                     default:
                         throw new NotSupportedException(string.Format("{0} is not supported.", _dateTimeType));
                 }
-                return new Tuple<string, object>(getSearchOperator(searchOper, searchField, type), dateTime);
+                return new Tuple<string, object>(searchOperator, dateTime);
             }
 
             if (type == typeof(Guid))
             {
-                var guid = new Guid(searchValue);
-                return new Tuple<string, object>(getSearchOperator(searchOper, searchField, type), guid);
+                var guid = searchValue == "null" ? (Guid?)null : new Guid(searchValue);
+                return new Tuple<string, object>(searchOperator, guid);
             }
 
             var resultValue = Convert.ChangeType(searchValue, type);
-            return new Tuple<string, object>(getSearchOperator(searchOper, searchField, type), resultValue);
+            return new Tuple<string, object>(searchOperator, resultValue);
         }
 
-        private string getSearchOperator(string ruleSearchOperator, string searchField, Type type)
+        private string getSearchOperator(string ruleSearchOperator, string searchField, Type type, string searchValue)
         {
             string whereOperation;
             if (!_whereOperation.TryGetValue(ruleSearchOperator, out whereOperation))
             {
                 throw new NotSupportedException(string.Format("{0} is not supported.", ruleSearchOperator));
+            }
+
+            if (isNullable(type) && (searchValue == "null"))
+            {
+                switch (ruleSearchOperator)
+                {
+                    case "eq":
+                        whereOperation = " !{0}.HasValue ";
+                        break;
+                    case "ne":
+                        whereOperation = " {0}.HasValue ";
+                        break;
+                    default:
+                        throw new NotSupportedException(string.Format("{0} is not supported.", ruleSearchOperator));
+                }
             }
 
             if (type == typeof(DateTime))
@@ -240,10 +284,22 @@ namespace JqGridHelper.DynamicSearch
             }
 
             if (string.IsNullOrWhiteSpace(filterExpression))
+            {
+                //{_search=true&nd=1450767916380&rows=10&page=1&sidx=Id&sord=asc&searchField=Code&searchString=&searchOper=eq&filters=}
+                var predicate = getPredicate<T>(_form["searchField"], _form["searchOper"], _form["searchString"]);
+                if (predicate != null)
+                {
+                    valuesList.Add(predicate.Item2);
+                    filterExpression = string.Format("{0}{1} And ", filterExpression, predicate.Item1);
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(filterExpression))
                 return query;
 
             filterExpression = filterExpression.Remove(filterExpression.Length - 5);
-            query = query.Where(filterExpression, valuesList.ToArray());
+            var args = valuesList.ToArray();
+            query = query.Where(filterExpression, args);
             return query;
         }
     }

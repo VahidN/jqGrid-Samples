@@ -32,7 +32,7 @@ namespace jqGrid03.Models
                     Id = i + 1,
                     Name = "نام " + (i + 1),
                     Price = i * 1000,
-                    Code = Guid.NewGuid(),
+                    Code = (i % 2 == 0) ? Guid.NewGuid() : (Guid?)null,
                     Supplier = new Supplier
                     {
                         Id = i + 1,

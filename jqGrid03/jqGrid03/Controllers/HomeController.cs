@@ -28,7 +28,7 @@ namespace jqGrid03.Controllers
             var totalPages = (int)Math.Ceiling(totalRecords / (float)pageSize);
 
             var productsQuery = list.AsQueryable();
-
+            //System.Collections.Generic.List`1[jqGrid03.Models.Product].Where(Param_0 => Param_0.Code.Value.ToString().Equals(null))}
             productsQuery = new JqGridSearch(request, this.Request.Form, DateTimeType.Persian).ApplyFilter(productsQuery);
             var productsList = productsQuery.OrderBy(request.sidx + " " + request.sord)
                                             .Skip(pageIndex * pageSize)
@@ -50,7 +50,7 @@ namespace jqGrid03.Controllers
                                      product.Supplier.CompanyName,
                                      product.Category.Name,
                                      product.Price.ToString(CultureInfo.InvariantCulture),
-                                     product.Code.ToString("D")
+                                     product.Code.HasValue? product.Code.Value.ToString("D") : string.Empty
                                 }
                 })).ToArray()
             };
