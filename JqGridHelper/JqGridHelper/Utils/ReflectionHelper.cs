@@ -11,12 +11,13 @@ namespace JqGridHelper.Utils
                 if (parent + property.Name == fieldName)
                     return property.PropertyType;
 
-                if (parent.Split('.').Length > dumpLevel)
+                if (parent.Split('.').Length > dumpLevel ||
+                    property.PropertyType.Name.Equals(parent.TrimEnd('.')))
                     continue;
 
                 if (isNestedProperty(property.PropertyType))
                 {
-                    var result = FindFieldType(property.PropertyType, fieldName, property.Name + ".");
+                    var result = FindFieldType(property.PropertyType, fieldName, property.Name + ".", dumpLevel);
                     if (result != null)
                         return result;
                 }
